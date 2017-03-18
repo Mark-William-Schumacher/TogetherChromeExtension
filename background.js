@@ -28,32 +28,32 @@ function initApp() {
 
 
 
-//
+/* on load , works for one page navigation sites like youtube */
 chrome.tabs.onUpdated.addListener(
   function(tabId, changeInfo, tab) {
     console.log(tabId,changeInfo,tab);
-    // TODO send a message to that tab. If the message comes back , then we know there
-    // is a poller living there.
-    // If we do not get a message back we start a content script poller at that location
-    // The poller will sit on stand by until netflix or youtube.
-    // Or just init a content script for each tab, and have the poller sit on standby.
+    //TODO
+    // CHECK IF YOUTUBE or NETFLIX FIRST
+    // POLL UNTIL URL CHANGES away from YOUTUBE
+    // STOP POLLING if TAB is not active.
+    // REGISTER the POLLER to wait for on ACTIVE events,
+    // this will also be in conjunction with the background script calling
+    // it to engage.
+    // NON-ACTIVE TAB WITH MOVIE PLAYING. What should we do here?
   }
 );
 
 /* onSwitching tabs */
 chrome.tabs.onActivated.addListener(function(activeInfo){
     console.log(activeInfo);
+    //TODO
+
 });
 
 
 
-
-
-//TODO
 //Set it up so that when the user is navigating around the tabs we are potentially executing
 // our poller to run on those tabs.
-
-
 chrome.runtime.onMessage.addListener(
 function(request, sender, sendResponse) {
     route = request.route;
@@ -110,7 +110,7 @@ function youtube_parser(url){
 
 function asyncCallForYoutube3Api(videoId, myApiKey, callback){
     $.getJSON("https://www.googleapis.com/youtube/v3/videos?id=" + videoId + "&key="+ myApiKey + "&part=snippet", callback)
-};
+ }
 
 window.onload = function() {
   initApp();
