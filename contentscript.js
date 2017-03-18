@@ -28,7 +28,9 @@ function gatherData(){
   var video = document.getElementsByTagName("video")[0];
   var an = lastEventcalled;
   if (video.duration) {
-        chrome.runtime.sendMessage({baseURI: video.baseURI, currentTime: video.currentTime,title: video.title,duration: video.duration, eventtype: an.type}, function(response) {
+        chrome.runtime.sendMessage({route:"YOUTUBE_SCRAPE", baseURI: video.baseURI,
+                                    currentTime: video.currentTime, title: video.title,
+                                    duration: video.duration, eventtype: an.type}, function(response) {
             console.log();
       });
   }
@@ -41,6 +43,23 @@ function tryToRemoveListeners(){
    try{video.removeEventListener('ended');}catch(err){}
    try{video.removeEventListener('playing');}catch(err){}
 }
+
+/**
+  Logs to the background script with current tab
+**/
+function logBg(msg){
+  logBg(msg,false)
+}
+function logBg(msg,bool){
+  chrome.tabs.getCurrent(function (tab){
+    chrome.runtime.sendMessage({route:"CS_LOG", 'msg': msg, 'tab':tab}, function(response) {
+      if (bool){
+        console.log(message)
+      }
+    })
+  })
+}
+
 
 var poller = {
    failed: 0,               // number of failed requests
