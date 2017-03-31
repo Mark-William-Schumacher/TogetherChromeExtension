@@ -14,7 +14,7 @@
     "page": "background.html"
   },
   "permissions": [
-    "identity","*://*.youtube.com/*", "*://youtube.com/*", "notifications", "tabs", "webNavigation"
+    "identity","*://*.youtube.com/*", "*://youtube.com/*","*://*/*", "notifications", "tabs", "webNavigation"
   ],
   "content_scripts" : [{
   "matches" : ["*://*.youtube.com/*", "*://youtube.com/*"],

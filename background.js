@@ -6,101 +6,144 @@ var config = {
 var myApiKey = "AIzaSyC6-huqtlksf5M3CUYKiRHwD7k5z2rEyR8"; //Youtube
 firebase.initializeApp(config);
 
-/**
- * initApp handles setting up the Firebase context and registering
- * callbacks for the auth status.
- *
- * The core initialization is in firebase.App - this is the glue class
- * which stores configuration. We provide an app name here to allow
- * distinguishing multiple app instances.
- *
- * This method also registers a listener with firebase.auth().onAuthStateChanged.
- * This listener is called when the user is signed in or out, and that
- * is where we update the UI.
- *
- * When signed in, we also authenticate to the Firebase Realtime Database.
- */
+ var pollerIsRunning = false;
+ var poller = {
+    failed: 0,               // number of failed requests
+    interval: 2500,          // kicks off the setTimeout
+    init: function(){        // starting interval - 5 seconds
+        console.log("Init called on poller")
+        setTimeout(
+            $.proxy(this.getData, this), this.interval
+        );
+        pollerIsRunning = true;
+    }, // get AJAX data + respond to it
+    getData: function(){
+        var self = this;
+        pollYoutubeTabs();
+        this.init()
+    },
+    // handle errors
+    errorHandler: function(){
+        if( ++this.failed < 10 ){
+            // give the server some breathing room by
+            // increasing the interval
+           this.interval += 1000;
+           // recurse
+           this.init();
+        } else {
+          pollerIsRunning = false;
+        }
+    }
+ };
+
 function initApp() {
   firebase.auth().onAuthStateChanged(function(user) {
     console.log('User state change detected from the Background script of the Chrome Extension:', user);
   });
+  poller.init();
 }
 
+function pollYoutubeTabs(){
+  chrome.tabs.query({}, function(tabs) {
+    for (var i = 0 ; i< tabs.length ; i+=1){
+        if (re.test(tabs[i].url)){
+          var id = youtube_parser(tabs[i].url);
+            if (id){
+                console.log("Youtube video found = " + id);
+                console.log("for tab = " + tabs[i].id);
+               pingMessagePromise(tabs[i].id)
+                .then(loadContentScriptPromise)
+                .then(dataRequestPromise)
+                .then(readYoutubeResponse).then(function (res) {
+                   console.log(res);
+               })
+                .catch(function (err){
+                  console.log(err);
+                });
+              }
+            }
+    }
+  });
+}
 
+function pingMessagePromise(tabId){
+  return new Promise(function(resolve, reject) {
+    chrome.tabs.sendMessage(tabId, {service: "ping"}, function(response) {
+      if (response) {
+        console.log("Already there");
+        return resolve({'hasScript':true,'id':tabId});
+      } else {
+        console.log("Not there: "+tabId);
+        return resolve({'hasScript':false,'id':tabId});
+      }
+    });
+  });
+}
+function loadContentScriptPromise(obj){
+  return new Promise(function(resolve, reject) {
+      if (obj.hasScript) {
+        resolve(obj);
+      } else {
+        resolve(executeScriptPromise(obj));
+      }
+  });
+}
 
-/* on load , works for one page navigation sites like youtube */
-chrome.tabs.onUpdated.addListener(
-  function(tabId, changeInfo, tab) {
-    console.log(tabId,changeInfo,tab);
-    //TODO
-    // CHECK IF YOUTUBE or NETFLIX FIRST
-    // POLL UNTIL URL CHANGES away from YOUTUBE
-    // STOP POLLING if TAB is not active.
-    // REGISTER the POLLER to wait for on ACTIVE events,
-    // this will also be in conjunction with the background script calling
-    // it to engage.
-    // NON-ACTIVE TAB WITH MOVIE PLAYING. What should we do here?
+function executeScriptPromise(obj){
+  console.log(obj);
+  return new Promise(function(resolve, reject) {
+    chrome.tabs.executeScript(obj.id, {file: "contentscript.js"}, function(response) {
+        if (chrome.runtime.lastError) {
+            console.log(chrome.runtime.lastError.message);
+            reject(new Error('Illegal injection on a chrome tab'));
+            return;
+        }
+        resolve(obj);
+      });
+    });
+}
+
+function dataRequestPromise(obj){
+  return new Promise(function(resolve, reject) {
+    chrome.tabs.sendMessage(obj.id, {service:"youtube_data_request"},function(response){
+          resolve(response);
+      });
+    });
   }
-);
 
-/* onSwitching tabs */
-chrome.tabs.onActivated.addListener(function(activeInfo){
-    console.log(activeInfo);
-    //TODO
-
-});
-
-
-
-//Set it up so that when the user is navigating around the tabs we are potentially executing
-// our poller to run on those tabs.
-chrome.runtime.onMessage.addListener(
-function(request, sender, sendResponse) {
-    route = request.route;
-
-    if ("CS_LOG" === route){
-      tab = request.tab;
-      console.log(tab.active + tab.url +" id ="+ tab.id + "\nMsg: " + request.msg);
-    }
-
-    if ("YOUTUBE_SCRAPE" === route){
-      console.log(sender.tab ?  "from a content script:" + sender.tab.url :  "from the extension");
-      parseData(request);
-      sendResponse({});
-    }
-});
-
-var lastId = -1;
-
-function parseData(data){
-    const uri =           data.baseURI
-    const currentTime =   data.currentTime
-    const title =         data.title
-    const duration =      data.duration
-    const eventtype =     data.type
-    const id = youtube_parser(uri);
-    if (lastId != id ){
-      lastId = id;
-      asyncCallForYoutube3Api(id,myApiKey, function(data){
-        if (typeof(data.items[0]) != "undefined") {
-            const videoDescription =  data.items[0].snippet.description;
-            const thumbnailMax =      data.items[0].snippet.thumbnails.maxres.url;
-            const thumbnailMedium =   data.items[0].snippet.thumbnails.medium.url;
-            const channelId =         data.items[0].snippet.channelId;
-            const channelTitle =      data.items[0].snippet.channelTitle;
-         } else {
-           console.log('error finding the video with the id given: '+id);
-         }
-         //TODO
-         // STORE IN FIREBASE HERE:
-         return;
-       });
-     } else{
-        console.log("user is still on the same video, no need to call api again");
-        //TODO
-        // STATUS UPDATE TO FIREBASE -> use it as a ping to the server that the user is currently watching
-     }
+function readYoutubeResponse(data){
+    return new Promise(function (resolve, reject) {
+        if (data) {
+            const id = youtube_parser(data.baseURI);
+            asyncCallForYoutube3Api(id, myApiKey, function (dataapi) {
+                if (typeof(dataapi.items[0]) != "undefined") {
+                    var obj = {
+                        videoId: id,
+                        videoDescription: dataapi.items[0].snippet.description,
+                        thumbnailMax: dataapi.items[0].snippet.thumbnails.standard.url,
+                        thumbnailMedium : dataapi.items[0].snippet.thumbnails.medium.url,
+                        channelId : dataapi.items[0].snippet.channelId,
+                        channelTitle : dataapi.items[0].snippet.channelTitle,
+                        uri : data.baseURI,
+                        currentTime : data.currentTime,
+                        title : dataapi.items[0].snippet.title,
+                        duration : data.duration,
+                        eventtype : data.type
+                    };
+                    resolve(obj)
+                }
+            });
+        }else{
+            console.log('error finding the video with the id given: ' + id);
+            reject(new Error('Unable to get back api data'));
+        }
+    });
 }
+
+// MAP the tab to a video Object onto a -
+var map = {};
+var re = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/;
+
 
 function youtube_parser(url){
     var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
