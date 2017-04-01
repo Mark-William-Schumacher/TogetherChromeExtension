@@ -8,5 +8,4 @@ describe('Array', function() {
   });
 });
 
-it('should be imported',  firebase.should.be.defined );
 

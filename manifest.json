@@ -18,7 +18,7 @@
   ],
   "content_scripts" : [{
   "matches" : ["*://*.youtube.com/*", "*://youtube.com/*"],
-  "js": ["lib/jquery-3.2.0.min.js","src/js/contentscript.js"]
+  "js": [ "lib/jquery-3.2.0.min.js","src/js/contentscript.js"]
   }],
   "content_security_policy":"script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com; object-src 'self'",
   "oauth2": {

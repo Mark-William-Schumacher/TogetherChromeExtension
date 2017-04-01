@@ -13,11 +13,10 @@ function listenForSessionAdditions(evesdropper, firebase){
     firebase.database().ref('sessions/' + userId).on('child_added',function(session){
         //Execute content script
         //RegisterListeners for playback events
-    }
     // On Session Addition, set up new content script on tab , Upon completion , register listeners for those
     // playback events . Each playback event will give the tab object we can use to query the videoID and the activeTab, playbackTime.
     // while playing -> loop to collect datapoints every second.
-}
+});
 
 
 // Done by poller to see if a session needs to be created.
