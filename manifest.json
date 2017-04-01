@@ -4,21 +4,21 @@
   "description": "This sample shows how to authorize Firebase in a Chrome extension using a Google account.",
   "version": "2.1",
   "icons": {
-    "128": "firebase.png"
+    "128": "src/assets/firebase.png"
   },
   "browser_action": {
-    "default_icon": "firebase.png",
-    "default_popup": "credentials.html"
+    "default_icon": "src/assets/firebase.png",
+    "default_popup": "src/html/credentials.html"
   },
   "background": {
-    "page": "background.html"
+    "page": "src/html/background.html"
   },
   "permissions": [
     "identity","*://*.youtube.com/*", "*://youtube.com/*","*://*/*", "notifications", "tabs", "webNavigation"
   ],
   "content_scripts" : [{
   "matches" : ["*://*.youtube.com/*", "*://youtube.com/*"],
-  "js": ["jquery-3.2.0.min.js","contentscript.js"]
+  "js": ["lib/jquery-3.2.0.min.js","src/js/contentscript.js"]
   }],
   "content_security_policy":"script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com; object-src 'self'",
   "oauth2": {
