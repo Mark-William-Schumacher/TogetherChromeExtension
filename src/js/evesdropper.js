@@ -9,21 +9,21 @@
 // EvesDropper  actively listened to record data, Eves dropper removes sessions, and upon removal
 
 // EvesDropper listens for additions on currentSessions and then injects a content script to monitor the tab
-function listenForSessionAdditions(evesdropper, firebase){
-    firebase.database().ref('sessions/' + userId).on('child_added',function(session){
+function listenForSessionAdditions(evesdropper, firebase) {
+    firebase.database().ref('sessions/' + userId).on('child_added', function (session) {
         //Execute content script
         //RegisterListeners for playback events
-    // On Session Addition, set up new content script on tab , Upon completion , register listeners for those
-    // playback events . Each playback event will give the tab object we can use to query the videoID and the activeTab, playbackTime.
-    // while playing -> loop to collect datapoints every second.
-});
-
+        // On Session Addition, set up new content script on tab , Upon completion , register listeners for those
+        // playback events . Each playback event will give the tab object we can use to query the videoID and the activeTab, playbackTime.
+        // while playing -> loop to collect datapoints every second.
+    });
+}
 
 // Done by poller to see if a session needs to be created.
 /**
  *
  * @param {firebase.database}  fb
- * @param (int) userId
+ * @param (id) userId
  */
 function queryCurrentSessions(fb,userId){
     var a = fb.database();
@@ -44,12 +44,17 @@ function queryCurrentSessions(fb,userId){
 //                 activeTab
 // }
 // Done by the poller
+/**
+ * @param {firebase} firebase
+ * @returns {Promise<void>}
+ */
 function createASession(firebase, userId, videoId, tabId){
-    var sessionId = firebase.database().ref()
-                            .child('sessions')
-                            .child(userId)
-                            .push()
-                            .set({tabId : tabId, videoId : videoId});
+    return firebase.database()
+            .ref()
+            .child('sessions')
+            .child(userId)
+            .push()
+            .set({tabId : tabId, videoId : videoId});
 }
 
 // adds a dataPoint
@@ -69,3 +74,4 @@ function updateASession(){
 function finishSession(){
 
 }
+
