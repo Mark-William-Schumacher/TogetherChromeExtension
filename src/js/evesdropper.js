@@ -9,7 +9,12 @@
 // EvesDropper  actively listened to record data, Eves dropper removes sessions, and upon removal
 
 // EvesDropper listens for additions on currentSessions and then injects a content script to monitor the tab
-function listenForSessionAdditions(evesdropper, firebase) {
+    /**
+     *
+     * @param evesdropper
+     * @param firebase
+     */
+function listenForSessionAdditions(evesdropper, firebase){
     firebase.database().ref('sessions/' + userId).on('child_added', function (session) {
         //Execute content script
         //RegisterListeners for playback events
@@ -19,21 +24,22 @@ function listenForSessionAdditions(evesdropper, firebase) {
     });
 }
 
+
 // Done by poller to see if a session needs to be created.
 /**
- *
  * @param {firebase.database}  fb
- * @param (id) userId
+ * @param userId
  */
-function queryCurrentSessions(fb,userId){
+function queryCurrentSessions(fb, userId) {
     var a = fb.database();
-    fb.database().ref('sessions/' + userId).once('value',function(listOfSessions){
+    fb.database().ref('sessions/' + userId).once('value', function (listOfSessions) {
         console.log(listOfSessions);
         return listOfSessions;
     });
 }
 
-// {sessions/userId/sessionId/:
+// PATH =  {sessions/userId/sessionId/:
+//
 //          sessions
 //             tabId
 //             videoId
@@ -45,22 +51,33 @@ function queryCurrentSessions(fb,userId){
 // }
 // Done by the poller
 /**
- * @param {firebase} firebase
+ * @param {} firebase
  * @returns {Promise<void>}
+ * /Sessions/userId/sessionId/  = data
  */
-function createASession(firebase, userId, videoId, tabId){
+function createASession(firebase, userId, videoId, tabId) {
     return firebase.database()
-            .ref()
-            .child('sessions')
-            .child(userId)
-            .push()
-            .set({tabId : tabId, videoId : videoId});
+        .ref()
+        .child('sessions')
+        .child(userId)
+        .push().ref
+        .set({tabId: tabId, videoId: videoId});
 }
 
-// adds a dataPoint
-function updateASession(){
-
-
+/**
+ *
+ * @param userId
+ * @param sessionId
+ * @returns {!firebase.Promise.<void>}
+ */
+function updateASession(userId, sessionId) {
+    return firebase.database()
+        .ref()
+        .child('sessions')
+        .child(userId)
+        .child(sessionId)
+        .child()
+        .set({tabId: tabId, videoId: videoId});
 }
 
 // Remove session from active session and place it under
@@ -71,7 +88,6 @@ function updateASession(){
 //        statusOfVideo
 //        serverTime
 //         activeTab
-function finishSession(){
+function finishSession() {
 
 }
-

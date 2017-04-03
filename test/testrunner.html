@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Together Tests</title>
+</head>
+<body>
+
+    <section id="todoapp">
+        ... the base markup of the application
+    </section>
+
+    <div id="mocha"></div>
+
+
+    <script src="../lib/jquery-3.2.0.min.js"></script>
+    <script src="http://www.gstatic.com/firebasejs/3.7.1/firebase.js"></script>
+    <script>
+        // Initialize  Develop Firebase
+        var config = {
+            apiKey: "AIzaSyC13USLwslHpgJIow1voTJvekUkbNRyg6Y",
+            authDomain: "together-dev-b38d4.firebaseapp.com",
+            databaseURL: "https://together-dev-b38d4.firebaseio.com",
+            projectId: "together-dev-b38d4",
+            storageBucket: "together-dev-b38d4.appspot.com",
+            messagingSenderId: "1035839545362"
+        };
+        firebase.initializeApp(config);
+    </script>
+    <script src="http://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.js"></script>
+    <script src="lib/chai.js"></script>
+    <script>
+        mocha.setup('bdd')
+        mocha.reporter('html');
+        var expect = chai.expect;
+        var assert = chai.assert;
+    </script>
+
+
+
+    <!--<script src="test-starter-file.js"></script>-->
+    <!--<script src="test.js"></script>-->
+    <script src="evesdropper.test.js"></script>
+    <script src="../src/js/evesdropper.js"></script>
+
+    <script>
+        mocha.run();
+    </script>
+
+</body>
+</html>

@@ -30,7 +30,7 @@ chrome.runtime.onMessage.addListener( function(request, sender, callback) {
             duration: video.duration,
             type: eventType
         };
-        callback(videojson);
+        callback(videojson);/**/
       } else{
         callback(null);
       }
