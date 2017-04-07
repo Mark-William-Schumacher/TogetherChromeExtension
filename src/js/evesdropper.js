@@ -27,57 +27,89 @@ function listenForSessionAdditions(evesdropper, firebase){
 
 // Done by poller to see if a session needs to be created.
 /**
- * @param {firebase.database}  fb
+ * @param fb {firebase}
  * @param userId
+ * @returns {!firebase.Promise.<*>}
  */
 function queryCurrentSessions(fb, userId) {
-    var a = fb.database();
-    fb.database().ref('sessions/' + userId).once('value', function (listOfSessions) {
-        console.log(listOfSessions);
-        return listOfSessions;
-    });
+    return fb.database().ref('sessions/' + userId).once('value');
 }
 
 // PATH =  {sessions/userId/sessionId/:
 //
-//          sessions
-//             tabId
+//         tabId
 //             videoId
-//             dataPoints
-//                 playbackTime
-//                 statusOfVideo
-//                 serverTime
-//                 activeTab
+//                dataPoints
+//                   playbackTime
+//                   statusOfVideo
+//                   serverTime
+//                   activeTab
 // }
 // Done by the poller
 /**
- * @param {} firebase
+ * @param firebase
+ * @param videoId {*}
+ * @param userId {*}
+ * @param tabId {*}
  * @returns {Promise<void>}
  * /Sessions/userId/sessionId/  = data
  */
-function createASession(firebase, userId, videoId, tabId) {
+function createASession(firebase, userId, tabId, videoId) {
     return firebase.database()
         .ref()
         .child('sessions')
         .child(userId)
-        .push().ref
-        .set({tabId: tabId, videoId: videoId});
+        .child(tabId)
+        .set({videoId: videoId});
 }
 
 /**
  *
+ * @param firebase
  * @param userId
- * @param sessionId
- * @returns {!firebase.Promise.<void>}
+ * @param tabId
+ * @returns {!firebase.Promise.<*>}
  */
-function updateASession(userId, sessionId) {
+function sessionExists(firebase, userId, tabId){
     return firebase.database()
         .ref()
         .child('sessions')
-        .child(userId)
-        .child(sessionId)
-        .child()
-        .set({tabId: tabId, videoId: videoId});
+        .child(userId+"/"+tabId).once("value").then(function(snapshot) {
+                var exists = (snapshot.val() !== null);
+                if (exists) {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+}
+
+/**
+ *
+ * @param firebase
+ * @param userId
+ * @param sessionId
+ */
+function updateASession(firebase, userId, tabId, status, activeTab, currentTime) {
+    if (! sessionExists(firebase, userId, tabId)){
+        return Promise.resolve(false);
+    }
+
+    var built = {
+        time: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    firebase.database()
+        .ref()
+        .child('sessions')
+        .child(userId+'/'+tabId)
+        .child('dataPoints')
+        .push({
+            time: firebase.database.ServerValue.TIMESTAMP,
+            status: status,
+            activeTab: activeTab,
+            playbackTime: currentTime,
+        })
 }
 
 // Remove session from active session and place it under
