@@ -75,12 +75,8 @@ function sessionExists(firebase, userId, tabId){
         .ref()
         .child('sessions')
         .child(userId+"/"+tabId).once("value").then(function(snapshot) {
-                var exists = (snapshot.val() !== null);
-                if (exists) {
-                    return true;
-                } else {
-                    return false;
-                }
+            console.log("snapshot.val:"+snapshot.val());
+                return (snapshot.val() !== null);
             });
 }
 
@@ -88,28 +84,31 @@ function sessionExists(firebase, userId, tabId){
  *
  * @param firebase
  * @param userId
- * @param sessionId
+ * @param tabId
+ * @param status
+ * @param activeTab
+ * @param currentTime
+ * @returns {!firebase.database.ThenableReference}
  */
 function updateASession(firebase, userId, tabId, status, activeTab, currentTime) {
-    if (! sessionExists(firebase, userId, tabId)){
-        return Promise.resolve(false);
-    }
-
-    var built = {
-        time: firebase.database.ServerValue.TIMESTAMP
-    };
-
-    firebase.database()
-        .ref()
-        .child('sessions')
-        .child(userId+'/'+tabId)
-        .child('dataPoints')
-        .push({
-            time: firebase.database.ServerValue.TIMESTAMP,
-            status: status,
-            activeTab: activeTab,
-            playbackTime: currentTime,
-        })
+    sessionExists(firebase, userId, tabId).then(function (bool){
+        if (bool) {
+            return firebase.database()
+                .ref()
+                .child('sessions/' + userId + '/' + tabId + '/dataPoints')
+                .push({
+                    time: firebase.database.ServerValue.TIMESTAMP,
+                    status: status,
+                    activeTab: activeTab,
+                    playbackTime: currentTime,
+                }).then(function(s){
+                    return true;
+                });
+        }
+        else{
+            return false;
+        }
+    });
 }
 
 // Remove session from active session and place it under

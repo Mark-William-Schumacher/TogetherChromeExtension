@@ -44,6 +44,18 @@
             )
         });
 
+    it('session should update', function(done) {
+        updateASession(firebase,1,1,"playing",true,12234).then(function (s){
+            done()
+        });
+    });
+
+    it('session should not update x2', function(done) {
+        updateASession(firebase,103400,100430,"playing",true,12234).then(function (s){
+            done()
+        });
+    });
+
     describe('Query all Sessions', function() {
         this.timeout(15000);
         it('session should not exist', function (done) {
