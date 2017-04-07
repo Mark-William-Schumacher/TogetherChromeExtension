@@ -91,7 +91,7 @@ function sessionExists(firebase, userId, tabId){
  * @returns {!firebase.database.ThenableReference}
  */
 function updateASession(firebase, userId, tabId, status, activeTab, currentTime) {
-    sessionExists(firebase, userId, tabId).then(function (bool){
+    return sessionExists(firebase, userId, tabId).then(function (bool){
         if (bool) {
             return firebase.database()
                 .ref()
@@ -106,7 +106,7 @@ function updateASession(firebase, userId, tabId, status, activeTab, currentTime)
                 });
         }
         else{
-            return null;
+            throw new Error("FSADF");
         }
     });
 }
