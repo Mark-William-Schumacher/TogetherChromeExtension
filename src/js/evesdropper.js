@@ -102,11 +102,11 @@ function updateASession(firebase, userId, tabId, status, activeTab, currentTime)
                     activeTab: activeTab,
                     playbackTime: currentTime,
                 }).then(function(s){
-                    return true;
+                    return s.ref.key;
                 });
         }
         else{
-            return false;
+            return null;
         }
     });
 }
